@@ -87,17 +87,17 @@ jobs:
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
-        run: yq e ".version = \"${{ $new_version }}\"" -i Chart.yaml
+        run: yq e ".version = \"$new_version\"" -i Chart.yaml
 
       - name: Commit and Push Changes
         run: |
           git config --global user.email "viram1999@gmail.com"
           git config --global user.name "viram"
           git add .
-          git commit -m "Helm chart for service ${{ $service }} will be update to version ${{ $new_version }}"
+          git commit -m "Helm chart for service $service will be update to version $new_version"
           git push
 
       - uses: mshick/add-pr-comment@v2
         with:
           message: |
-            Helm chart for service ${{ $service }} will be update to version ${{ $new_version }}
+            Helm chart for service $service will be update to version $new_version
