@@ -58,39 +58,39 @@ jobs:
       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
-      # - name: Install yq
-      #   run: |
-      #     wget https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_amd64 -O /usr/bin/yq &&\
-      #     chmod +x /usr/bin/yq
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_amd64 -O /usr/bin/yq &&\
+          chmod +x /usr/bin/yq
 
-      # - name: Update Helm Chart Version
-      #   run: |
-      #     for file in ${{ matrix.changed_files }}; do
-      #       echo $file
-      #       # if [[ $file == "Chart.yaml" ]]; then
-      #       #   yq e '.version = "0.0.4"' -i $file
-      #       # fi
-      #     done
+      - name: Update Helm Chart Version
+        run: |
+          for file in ${{ matrix.files }}; do
+            echo $file
+            if [[ $file == "Chart.yaml" ]]; then
+              yq e '.version = "0.0.4"' -i $file
+            fi
+          done
 
-      # - name: Set up Helm
-      #   uses: azure/setup-helm@v3.5
+      - name: Set up Helm
+        uses: azure/setup-helm@v3.5
 
-      # - name: Install helm s3 plugin
-      #   run: helm plugin install https://github.com/hypnoglow/helm-s3.git
+      - name: Install helm s3 plugin
+        run: helm plugin install https://github.com/hypnoglow/helm-s3.git
 
-      # - name: run update version script
-      #   id: updated-version-script
-      #   run: sh ./scripts/update-version.sh
+      - name: run update version script
+        id: updated-version-script
+        run: sh ./scripts/update-version.sh
 
-      # - name: fetch environment and service from pull request title
-      #   id: fetch-silo-env-svc-names
-      #   run: sh ./scripts/update-version.sh
+      - name: fetch environment and service from pull request title
+        id: fetch-silo-env-svc-names
+        run: sh ./scripts/update-version.sh
 
-      # - name: update helm chart verison
-      #   working-directory: ${{ matrix.changed_files }}
-      #   run: yq e ".version = \"${{ steps.updated-version-script.outputs.new_version }}\"" -i Chart.yaml
+      - name: update helm chart verison
+        working-directory: ${{ matrix.changed_files }}
+        run: yq e ".version = \"${{ steps.updated-version-script.outputs.new_version }}\"" -i Chart.yaml
 
-      # - uses: mshick/add-pr-comment@v2
-      #   with:
-      #     message: |
-      #       Helm chart for service ${{ steps.fetch-silo-env-svc-names.outputs.service }} will be update to version ${{ steps.updated-version-script.outputs.new_version }}
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Helm chart for service ${{ steps.fetch-silo-env-svc-names.outputs.service }} will be update to version ${{ steps.updated-version-script.outputs.new_version }}
