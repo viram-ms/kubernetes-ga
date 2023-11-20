@@ -86,7 +86,7 @@ jobs:
         id: fetch-silo-env-svc-names
         run: |
           chmod +x ./.github/scripts/fetch-pr-title.sh
-          ./.github/scripts/fetch-pr-title.sh ${{ github.event.pull_request.title }}
+          ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
