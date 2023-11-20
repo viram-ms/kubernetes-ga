@@ -76,7 +76,7 @@ jobs:
       - name: run update version script
         id: updated-version-script
         run: |
-          cwd
+          pwd
           sh ../scripts/update-version.sh
 
       - name: fetch environment and service from pull request title
