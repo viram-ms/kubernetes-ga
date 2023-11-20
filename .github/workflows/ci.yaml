@@ -103,4 +103,5 @@ jobs:
       - uses: mshick/add-pr-comment@v2
         with:
           message: |
-            Helm chart for service $service will be update to version $new_version
+            Helm chart for service ${{ env.service }} will be update to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+          allow-repeats: true
