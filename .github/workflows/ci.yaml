@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      matrix: ${{ steps.set-matrix.outputs }}
+      matrix: ${{ steps.changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,25 +26,19 @@ jobs:
         with:
           dir_names_max_depth: 1
           files: charts/**
+          json: true
+          quotepath: false
+          escape_json: false
 
       - name: List all changed files
-        run: |
-          echo ${{ steps.changed-files.outputs.all_changed_files }}
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
-          done
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
-      - name: Set Matrix
-        id: set-matrix
-        run: |
-          echo "matrix: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}"
-
-  matrix:
+  matrix-job:
     needs: changed-files-job
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        changed_files: ${{fromJson(needs.changed-files-job.outputs.matrix)}}
+        files: ${{ fromJSON(needs.changed-files.outputs.matrix) }}
     permissions:
       pull-requests: write
     steps:
@@ -53,7 +47,7 @@ jobs:
 
       - name: Run Matrix Job
         run: |
-          echo "Running matrix job for changed file: ${{ matrix.file }}"
+          echo "Running matrix job for changed file: ${{ matrix.files }}"
 
       # - uses: aws-actions/configure-aws-credentials@v3
       #   with:
