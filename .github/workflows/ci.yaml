@@ -51,7 +51,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ GITHUB_HEAD_REF }}
+          ref: $GITHUB_HEAD_REF
 
       # - uses: aws-actions/configure-aws-credentials@v3
       #   with:
