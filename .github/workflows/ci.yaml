@@ -75,9 +75,8 @@ jobs:
 
       - name: run update version script
         id: updated-version-script
-        run: |
-          pwd
-          sh ./.github/scripts/update-version.sh
+        working-directory: ${{ matrix.files }}
+        run: sh ./.github/scripts/update-version.sh
 
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names

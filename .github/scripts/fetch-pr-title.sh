@@ -2,14 +2,14 @@
 
 # Get the pull request title
 PR_TITLE="${GITHUB_EVENT_NAME}"
-
+echo $PR_TITLE
 # Define the environment names
 # ENV_NAMES=("sqa3" "stg" "prod")
-ENV_NAMES=($(ls -1 --color=never ../../environments/fast  | grep -v ":" | grep -v '^[[:space:]]*$'))
+ENV_NAMES=($(ls -1 --color=never environments/fast  | grep -v ":" | grep -v '^[[:space:]]*$'))
 # SVC_NAMES=("identity" "event" "auditlog" "authentication" "proxy" "email" "saml" "rbac")
-SVC_NAMES=($(ls -1 --color=never ../../charts  | grep -v ":" | grep -v '^[[:space:]]*$'))
+SVC_NAMES=($(ls -1 --color=never charts  | grep -v ":" | grep -v '^[[:space:]]*$'))
 # SILO_NAMES=("fast")
-SILO_NAMES=($(ls -1 --color=never ../../environments  | grep -v ":" | grep -v '^[[:space:]]*$'))
+SILO_NAMES=($(ls -1 --color=never environments  | grep -v ":" | grep -v '^[[:space:]]*$'))
 
 
 # Loop through the environment names
