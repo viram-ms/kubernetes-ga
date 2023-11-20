@@ -40,7 +40,7 @@ jobs:
           echo "matrix: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}"
 
   matrix:
-    needs: changed-files
+    needs: changed-files-job
     runs-on: ubuntu-latest
     strategy:
       matrix:
