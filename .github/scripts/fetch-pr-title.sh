@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get the pull request title
-PR_TITLE="${GITHUB_EVENT_NAME}"
+PR_TITLE=$1
 echo $PR_TITLE
 # Define the environment names
 # ENV_NAMES=("sqa3" "stg" "prod")
