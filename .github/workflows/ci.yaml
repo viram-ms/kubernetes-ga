@@ -96,6 +96,7 @@ jobs:
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
+          git pull
           git add .
           git commit -m "Helm chart for service $service will be update to version $new_version"
           git push
@@ -103,5 +104,5 @@ jobs:
       - uses: mshick/add-pr-comment@v2
         with:
           message: |
-            Helm chart for service ${{ env.service }} will be update to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+            Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
           allow-repeats: true
