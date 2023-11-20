@@ -60,7 +60,7 @@ jobs:
 
       - name: Update Helm Chart Version
         run: |
-          for file in ${{ matrix.files }}; do
+          for file in ${{ matrix.files }}/*; do
             echo $file
             if [[ $file == "Chart.yaml" ]]; then
               yq e '.version = "0.0.4"' -i $file
@@ -75,11 +75,13 @@ jobs:
 
       - name: run update version script
         id: updated-version-script
-        run: sh ./scripts/update-version.sh
+        run: |
+          cwd
+          sh ../scripts/update-version.sh
 
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names
-        run: sh ./scripts/update-version.sh
+        run: sh ../scripts/update-version.sh
 
       - name: update helm chart verison
         working-directory: ${{ matrix.changed_files }}
