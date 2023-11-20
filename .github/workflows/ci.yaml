@@ -40,8 +40,7 @@ jobs:
     strategy:
       matrix:
         files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
-    permissions:
-      pull-requests: write
+    permissions: write-all
     steps:
       - name: Run Matrix Job
         run: |
@@ -51,7 +50,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: $GITHUB_HEAD_REF
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
       # - uses: aws-actions/configure-aws-credentials@v3
       #   with:
