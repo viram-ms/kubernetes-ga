@@ -75,11 +75,15 @@ jobs:
 
       - name: run update version script
         id: updated-version-script
-        run: ./.github/scripts/update-version.sh  ${{ matrix.files }}
+        run: |
+          chmod +x ./.github/scripts/update-version.sh 
+          ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names
-        run: ./.github/scripts/fetch-pr-title.sh
+        run: |
+          chmod +x ./.github/scripts/fetch-pr-title.sh
+          ./.github/scripts/fetch-pr-title.sh
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
