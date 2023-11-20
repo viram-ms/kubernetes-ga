@@ -43,15 +43,15 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: $GITHUB_HEAD_REF
-
       - name: Run Matrix Job
         run: |
           echo $GITHUB_HEAD_REF
           echo "Running matrix job for changed file: ${{ matrix.files }}"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ GITHUB_HEAD_REF }}
 
       # - uses: aws-actions/configure-aws-credentials@v3
       #   with:
