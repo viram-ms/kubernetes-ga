@@ -37,7 +37,7 @@ jobs:
       - name: Set Matrix
         id: set-matrix
         run: |
-          echo "matrix: ${{ toJson(fromJson('[]') + steps.changed-files.outputs.all_changed_files) }}"
+          echo "matrix: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}"
 
   matrix:
     needs: changed-files
