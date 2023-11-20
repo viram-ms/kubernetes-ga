@@ -77,14 +77,14 @@ jobs:
         id: updated-version-script
         run: |
           pwd
-          sh ../scripts/update-version.sh
+          sh ./.github/scripts/update-version.sh
 
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names
-        run: sh ../scripts/update-version.sh
+        run: sh ./.github/scripts/fetch-pr-title.sh
 
       - name: update helm chart verison
-        working-directory: ${{ matrix.changed_files }}
+        working-directory: ${{ matrix.files }}
         run: yq e ".version = \"${{ steps.updated-version-script.outputs.new_version }}\"" -i Chart.yaml
 
       - uses: mshick/add-pr-comment@v2
