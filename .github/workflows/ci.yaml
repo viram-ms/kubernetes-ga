@@ -58,11 +58,6 @@ jobs:
       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
-      - name: Install yq
-        run: |
-          wget https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_amd64 -O /usr/bin/yq &&\
-          chmod +x /usr/bin/yq
-
       - name: Update Helm Chart Version
         run: |
           for file in ${{ matrix.files }}; do
