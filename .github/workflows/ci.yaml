@@ -92,14 +92,14 @@ jobs:
         working-directory: ${{ matrix.files }}
         run: yq e ".version = \"$new_version\"" -i Chart.yaml
 
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-          git pull
-          git add .
-          git commit -m "Helm chart for service $service will be update to version $new_version"
-          git push
+      # - name: Commit and Push Changes
+      #   run: |
+      #     git config --global user.email "github-actions@github.com"
+      #     git config --global user.name "github-actions"
+      #     git pull
+      #     git add .
+      #     git commit -m "Helm chart for service $service will be update to version $new_version"
+      #     git push
 
       - uses: mshick/add-pr-comment@v2
         with:
