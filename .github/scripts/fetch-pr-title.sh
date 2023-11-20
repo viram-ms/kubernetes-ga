@@ -30,7 +30,7 @@ for SVC_NAME in "${SVC_NAMES[@]}"; do
 done
 
 for SILO_NAME in "${SILO_NAMES[@]}"; do
- # Check if the environment name is in the pull request title
+ # Check if the environment name is in the pull request title.
     if [[ $PR_TITLE == "$SILO_NAME" ]]; then
         echo "silo: $SILO_NAME" >> "$GITHUB_ENV"
         break
