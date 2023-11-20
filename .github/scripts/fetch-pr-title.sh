@@ -14,25 +14,28 @@ SILO_NAMES=($(ls -1 --color=never environments  | grep -v ":" | grep -v '^[[:spa
 
 # Loop through the environment names
 for ENV_NAME in "${ENV_NAMES[@]}"; do
+    echo $ENV_NAME
  # Check if the environment name is in the pull request title
     if [[ $PR_TITLE == "$ENV_NAME" ]]; then
-        echo "environment: $ENV_NAME" >> "$GITHUB_ENV"
+        echo "environment=$ENV_NAME" >> "$GITHUB_ENV"
         break
     fi
 done
 
 for SVC_NAME in "${SVC_NAMES[@]}"; do
- # Check if the environment name is in the pull request title
+    echo $SVC_NAME
+ # Check if the service name is in the pull request title
     if [[ $PR_TITLE == "$SVC_NAME" ]]; then
-        echo "service: $SVC_NAME" >> "$GITHUB_ENV"
+        echo "service=$SVC_NAME" >> "$GITHUB_ENV"
         break
     fi
 done
 
 for SILO_NAME in "${SILO_NAMES[@]}"; do
- # Check if the environment name is in the pull request title.
+    echo $SILO_NAME
+ # Check if the silo is in the pull request title.
     if [[ $PR_TITLE == "$SILO_NAME" ]]; then
-        echo "silo: $SILO_NAME" >> "$GITHUB_ENV"
+        echo "silo=$SILO_NAME" >> "$GITHUB_ENV"
         break
     fi
 done
