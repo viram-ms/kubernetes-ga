@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      changed-files: ${{ steps.changed.outputs.changed-files }}
+      changed-files: ${{ steps.changed-files.outputs.changed-files }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
       - uses: tj-actions/changed-files@v40
         id: changed-files
         with:
-          dir_names_max_depth: 2
+          dir_names_max_depth: 1
           files: charts/**
 
       - name: List all changed files
