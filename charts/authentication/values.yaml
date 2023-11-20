@@ -27,7 +27,7 @@ podAnnotations: {}
 
 podSecurityContext:
   {}
-  # fsGroup: 2000
+  # fsGroup: 20002
 
 securityContext:
   {}
