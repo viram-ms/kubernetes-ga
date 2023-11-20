@@ -1,6 +1,12 @@
 #!/bin/bash
 
 # Extract the version number from the Chart.yaml file
+path=$1
+
+echo $path
+
+cd $path
+
 version=$(yq e '.version' Chart.yaml)
 
 # Split the version number into major, minor, and patch components
