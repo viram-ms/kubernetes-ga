@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      changed-files: ${{ steps.changed-files.outputs.changed-files }}
+      changed-files: ${{ steps.changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
