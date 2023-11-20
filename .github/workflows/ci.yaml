@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        files: ${{ fromJSON(needs.changed-files.outputs.matrix) }}
+        files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
     permissions:
       pull-requests: write
     steps:
