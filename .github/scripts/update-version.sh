@@ -5,10 +5,11 @@ path=$1
 
 echo $path
 
-cd $path
 
-version=$(yq e '.version' Chart.yaml)
 
+version=$(yq e '.version' $path/Chart.yaml)
+
+echo $version
 # Split the version number into major, minor, and patch components
 IFS='.' read -ra ADDR <<< "$version"
 major="${ADDR[0]}"
