@@ -24,6 +24,7 @@ jobs:
       - uses: tj-actions/changed-files@v40
         id: changed-files
         with:
+          fetch_depth: 1
           dir_names_max_depth: 1
           files: charts/**
           json: true
