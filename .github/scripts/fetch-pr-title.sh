@@ -4,11 +4,11 @@ if [ $# -eq 0 ]; then
   echo "No argument provided. Usage: $0 <your_argument>"
   exit 1
 fi
-
 # Get the pull request title
 pr_title=$1
 # Convert the pull request title to lowercase
-lowercase_pr_title=$(echo "$input_argument" | tr '[:upper:]' '[:lower:]')
+lowercase_pr_title=$(echo "$pr_title" | tr '[:upper:]' '[:lower:]')
+echo "$pr_title $lowercase_pr_title"
 # Define the environment names
 # ENV_NAMES=("sqa3" "stg" "prod")
 env_names=($(ls -1 --color=never environments/fast  | grep -v ":" | grep -v '^[[:space:]]*$'))
@@ -19,8 +19,8 @@ silo_names=($(ls -1 --color=never environments  | grep -v ":" | grep -v '^[[:spa
 
 
 # Loop through the environment names
-for env_name in "${env_name[@]}"; do
-    echo "lie 23 $env_name"
+for env_name in "${env_names[@]}"; do
+    echo "line 23 $env_name"
  # Check if the environment name is in the pull request title
     if [[ $lowercase_pr_title == *"$env_name"* ]]; then
         echo "line 26"
