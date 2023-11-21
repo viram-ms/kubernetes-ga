@@ -17,9 +17,8 @@ jobs:
       pull-requests: read
     outputs:
       matrix: ${{ steps.changed-files.outputs.all_changed_files }}
-      silo: ${{ steps.fetch-silo-env-svc-names.outputs.silo }}
-      environment: ${{ steps.fetch-silo-env-svc-names.outputs.environment }}
-      service: ${{ steps.fetch-silo-env-svc-names.outputs.service }}
+      silo: ${{ steps.fetch-silo-env-names.outputs.silo }}
+      environment: ${{ steps.fetch-silo-env-names.outputs.environment }}
 
     steps:
       - name: Checkout code
@@ -42,7 +41,7 @@ jobs:
         run: chmod +x ./.github/scripts/*
 
       - name: fetch environment and service from pull request title
-        id: fetch-silo-env-svc-names
+        id: fetch-silo-env-names
         run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
   matrix-job:
@@ -56,7 +55,6 @@ jobs:
     env:
       silo: ${{ needs.changed-files-job.outputs.silo }}
       environment: ${{ needs.changed-files-job.outputs.environment }}
-      service: ${{ needs.changed-files-job.outputs.service }}
     environment: ${{ needs.changed-files-job.outputs.environment }}
     steps:
       - name: Checkout code
@@ -80,6 +78,12 @@ jobs:
           helm plugin install https://github.com/hypnoglow/helm-s3.git
           helm repo add service-helm-charts s3://service-helm-charts
 
+      - name: set environment value
+        run: |
+          value=$(echo "${{ matrix.files }}" | cut -d"/" -f2)
+          echo "Value: $value"
+          echo "service=$value" >> "$GITHUB_ENV"
+
       - name: update file permission
         run: chmod +x ./.github/scripts/*
 
@@ -100,7 +104,7 @@ jobs:
 
       - name: run helm chart template command
         working-directory: ${{ matrix.files }}
-        run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
+        run: helm template ./ -f values.yaml > ../../${{ env.service }}-chart.txt
 
       - name: check dir
         run: |
@@ -133,7 +137,7 @@ jobs:
         run: helm package ./
 
       - name: Push Helm chart to S3
-        run: helm s3 push ./${{ matrix.files }}/${{ env.service }}.${{ env.new_version }}.tgz service-helm-charts
+        run: helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
 
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}

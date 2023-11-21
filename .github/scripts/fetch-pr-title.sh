@@ -13,7 +13,7 @@ echo "$pr_title $lowercase_pr_title"
 # ENV_NAMES=("sqa3" "stg" "prod")
 env_names=($(ls -1 --color=never environments/fast  | grep -v ":" | grep -v '^[[:space:]]*$'))
 # SVC_NAMES=("identity" "event" "auditlog" "authentication" "proxy" "email" "saml" "rbac")
-svc_names=($(ls -1 --color=never charts  | grep -v ":" | grep -v '^[[:space:]]*$'))
+# svc_names=($(ls -1 --color=never charts  | grep -v ":" | grep -v '^[[:space:]]*$'))
 # SILO_NAMES=("fast")
 silo_names=($(ls -1 --color=never environments  | grep -v ":" | grep -v '^[[:space:]]*$'))
 
@@ -30,16 +30,16 @@ for env_name in "${env_names[@]}"; do
     fi
 done
 
-for svc_name in "${svc_names[@]}"; do
-    echo "line 33 $svc_names"
- # Check if the service name is in the pull request title
-    if [[ $lowercase_pr_title == *"$svc_name"* ]]; then
-        echo "line 36"
-        service=$svc_name
-        echo "service=$svc_name" >> "$GITHUB_OUTPUT"
-        break
-    fi
-done
+# for svc_name in "${svc_names[@]}"; do
+#     echo "line 33 $svc_names"
+#  # Check if the service name is in the pull request title
+#     if [[ $lowercase_pr_title == *"$svc_name"* ]]; then
+#         echo "line 36"
+#         service=$svc_name
+#         echo "service=$svc_name" >> "$GITHUB_OUTPUT"
+#         break
+#     fi
+# done
 
 for silo_name in "${silo_names[@]}"; do
     echo "line 43 $silo_name"
