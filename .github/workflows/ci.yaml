@@ -44,12 +44,8 @@ jobs:
 
           #!/bin/bash
 
-          if [ $# -eq 0 ]; then
-            echo "No argument provided. Usage: $0 <your_argument>"
-            exit 1
-          fi
           # Get the pull request title
-          pr_title=$1
+          pr_title="${{ github.event.pull_request.title }}"
           # Convert the pull request title to lowercase
           lowercase_pr_title=$(echo "$pr_title" | tr '[:upper:]' '[:lower:]')
           echo "$pr_title $lowercase_pr_title"
