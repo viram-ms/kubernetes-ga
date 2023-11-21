@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      # matrix: ${{ steps.changed-files.outputs.all_changed_files }}
+      matrix: ${{ steps.changed-files.outputs.all_changed_files }}
       silo: ${{ steps.fetch-silo-env-svc-names.outputs.silo }}
       environment: ${{ steps.fetch-silo-env-svc-names.outputs.environment }}
       service: ${{ steps.fetch-silo-env-svc-names.outputs.service }}
@@ -41,132 +41,66 @@ jobs:
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names
         run: |
+          chmod +x ./.github/scripts/fetch-pr-title.sh
+          ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
-          #!/bin/bash
+  matrix-job:
+    needs: changed-files-job
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
+    permissions: write-all
+    env:
+      silo: ${{ needs.changed-files-job.outputs.silo }}
+      environment: ${{ needs.changed-files-job.outputs.environment }}
+      service: ${{ needs.changed-files-job.outputs.service }}
 
-          # Get the pull request title
-          pr_title="${{ github.event.pull_request.title }}"
-          # Convert the pull request title to lowercase
-          lowercase_pr_title=$(echo "$pr_title" | tr '[:upper:]' '[:lower:]')
-          echo "$pr_title $lowercase_pr_title"
-          # Define the environment names
-          # ENV_NAMES=("sqa3" "stg" "prod")
-          env_names=($(ls -1 --color=never environments/fast  | grep -v ":" | grep -v '^[[:space:]]*$'))
-          # SVC_NAMES=("identity" "event" "auditlog" "authentication" "proxy" "email" "saml" "rbac")
-          svc_names=($(ls -1 --color=never charts  | grep -v ":" | grep -v '^[[:space:]]*$'))
-          # SILO_NAMES=("fast")
-          silo_names=($(ls -1 --color=never environments  | grep -v ":" | grep -v '^[[:space:]]*$'))
-
-
-          # Loop through the environment names
-          for env_name in "${env_names[@]}"; do
-              echo "line 23 $env_name"
-          # Check if the environment name is in the pull request title
-              if [[ $lowercase_pr_title == *"$env_name"* ]]; then
-                  echo "line 26"
-                  environment=$env_name
-                  echo "environment=$env_name" >> "$GITHUB_ENV"
-                  break
-              fi
-          done
-
-          for svc_name in "${svc_names[@]}"; do
-              echo "line 33 $svc_names"
-          # Check if the service name is in the pull request title
-              if [[ $lowercase_pr_title == *"$svc_name"* ]]; then
-                  echo "line 36"
-                  service=$svc_name
-                  echo "service=$svc_name" >> "$GITHUB_ENV"
-                  break
-              fi
-          done
-
-          for silo_name in "${silo_names[@]}"; do
-              echo "line 43 $silo_name"
-          # Check if the silo is in the pull request title.
-              if [[ $lowercase_pr_title == *"$silo_name"* ]]; then
-                  echo "line 46"
-                  silo=$silo_name
-                  echo "silo=$silo_name" >> "$GITHUB_ENV"
-                  break
-              fi
-          done
-
-          echo "line 52 $service $environment $silo"
-
-      - name: List all env
+    steps:
+      - name: Run Matrix Job
         run: |
-          echo '${{ steps.fetch-silo-env-svc-names.outputs.silo }}'
-          echo '${{ steps.fetch-silo-env-svc-names.outputs.environment }}'
-          echo '${{ steps.fetch-silo-env-svc-names.outputs.service }}'
+          echo $GITHUB_HEAD_REF
+          echo "Running matrix job for changed file: ${{ matrix.files }}"
+          echo ${{ needs.changed-files-job.outputs.silo }}
+          echo ${{ needs.changed-files-job.outputs.environment }}
+          echo ${{ needs.changed-files-job.outputs.service }}
 
-      # - name: set output
-      #   run: |
-      #     echo "environment=${{ env.environment }}" >> "$GITHUB_ENV"
-      #     echo "silo=${{ env.silo }}" >> "$GITHUB_ENV"
-      #     echo "service=${{ env.service }}" >> "$GITHUB_ENV"
-      #     echo ${{ env.environment }} ${{ env.silo }} ${{ env.service }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
-  # matrix-job:
-  #   needs: changed-files-job
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
-  #   permissions: write-all
-  #   env:
-  #     silo: ${{ needs.changed-files-job.outputs.silo }}
-  #     environment: ${{ needs.changed-files-job.outputs.environment }}
-  #     service: ${{ needs.changed-files-job.outputs.service }}
+      # - uses: aws-actions/configure-aws-credentials@v3
+      #   with:
+      #     aws-region: us-east-2
+      #     role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
-  #   steps:
-  #     - name: Run Matrix Job
-  #       run: |
-  #         echo $GITHUB_HEAD_REF
-  #         echo "Running matrix job for changed file: ${{ matrix.files }}"
-  #         echo ${{ needs.changed-files-job.outputs.silo }}
-  #         echo ${{ needs.changed-files-job.outputs.environment }}
-  #         echo ${{ needs.changed-files-job.outputs.service }}
+      - name: Set up Helm
+        uses: azure/setup-helm@v3.5
 
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ github.head_ref }}
-  #         fetch-depth: 0
+      - name: Install helm s3 plugin
+        run: helm plugin install https://github.com/hypnoglow/helm-s3.git
 
-  #     # - uses: aws-actions/configure-aws-credentials@v3
-  #     #   with:
-  #     #     aws-region: us-east-2
-  #     #     role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
-  #     #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #     #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
+      - name: run update version script
+        id: updated-version-script
+        run: |
+          chmod +x ./.github/scripts/update-version.sh 
+          ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
-  #     - name: Set up Helm
-  #       uses: azure/setup-helm@v3.5
+      - name: run helm chart lint command
+        working-directory: ${{ matrix.files }}
+        run: helm lint
 
-  #     - name: Install helm s3 plugin
-  #       run: helm plugin install https://github.com/hypnoglow/helm-s3.git
+      - name: run helm chart template command
+        working-directory: ${{ matrix.files }}
+        run: helm template ./ -f values.yaml
 
-  #     - name: run update version script
-  #       id: updated-version-script
-  #       run: |
-  #         chmod +x ./.github/scripts/update-version.sh
-  #         ./.github/scripts/update-version.sh  ${{ matrix.files }}
-
-  #     - name: run helm chart lint command
-  #       working-directory: ${{ matrix.files }}
-  #       run: helm lint
-
-  #     - name: run helm chart template command
-  #       working-directory: ${{ matrix.files }}
-  #       run: helm template ./ -f values.yaml
-
-  #     - uses: mshick/add-pr-comment@v2
-  #       with:
-  #         message: |
-  #           Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
-  #         allow-repeats: true
-
-  # chmod +x ./.github/scripts/fetch-pr-title.sh
-  # ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
+      - uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+          allow-repeats: true

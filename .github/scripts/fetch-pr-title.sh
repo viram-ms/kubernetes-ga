@@ -25,7 +25,7 @@ for env_name in "${env_names[@]}"; do
     if [[ $lowercase_pr_title == *"$env_name"* ]]; then
         echo "line 26"
         environment=$env_name
-        echo "environment=$env_name" >> "$GITHUB_ENV"
+        echo "environment=$env_name" >> "$GITHUB_OUTPUT"
         break
     fi
 done
@@ -36,7 +36,7 @@ for svc_name in "${svc_names[@]}"; do
     if [[ $lowercase_pr_title == *"$svc_name"* ]]; then
         echo "line 36"
         service=$svc_name
-        echo "service=$svc_name" >> "$GITHUB_ENV"
+        echo "service=$svc_name" >> "$GITHUB_OUTPUT"
         break
     fi
 done
@@ -47,7 +47,7 @@ for silo_name in "${silo_names[@]}"; do
     if [[ $lowercase_pr_title == *"$silo_name"* ]]; then
         echo "line 46"
         silo=$silo_name
-        echo "silo=$silo_name" >> "$GITHUB_ENV"
+        echo "silo=$silo_name" >> "$GITHUB_OUTPUT"
         break
     fi
 done
