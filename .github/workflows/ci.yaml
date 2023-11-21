@@ -133,7 +133,7 @@ jobs:
         run: helm package ./
 
       - name: Push Helm chart to S3
-        run: helm s3 push ./${{ matrix.files }}.${{ env.service }}.${{ env.new_version }}.tgz service-helm-charts
+        run: helm s3 push ./${{ matrix.files }}/${{ env.service }}.${{ env.new_version }}.tgz service-helm-charts
 
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
