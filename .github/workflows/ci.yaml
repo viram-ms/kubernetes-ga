@@ -11,7 +11,22 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
+      - name: fetch environment and service from pull request title
+        id: check-pr-title
+        run: ./.github/scripts/check-pr-title.sh "${{ github.event.pull_request.title }}"
+
   changed-files-job:
+    needs: [check-pr-title]
+    if: needs.check-pr-title.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -45,7 +60,7 @@ jobs:
         run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
   matrix-job:
-    needs: changed-files-job
+    needs: [check-pr-title, changed-files-job]
     runs-on: ubuntu-latest
     strategy:
       matrix:
