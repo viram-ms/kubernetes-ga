@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fast-sqa3-authentication
+  namespace: argocd
+spec:
+  project: fast-sqa3
+  syncPolicy:
+    automated:
+      selfHeal: true
+  destination:
+    name: fast-sqa3
+    namespace: identity
+  sources:
+    - chart: authentication
+      repoURL: http://service-helm-charts.s3.amazonaws.com
+      targetRevision: 0.0.1
+      helm:
+        releaseName: authentication
+        valuesFiles:
+          - "$values/environments/fast/sqa3/authentication/values.yaml"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fast-sqa3-event
+  namespace: argocd
+spec:
+  project: fast-sqa3
+  syncPolicy:
+    automated:
+      selfHeal: true
+  destination:
+    name: fast-sqa3
+    namespace: identity
+  sources:
+    - chart: event
+      repoURL: http://service-helm-charts.s3.amazonaws.com
+      targetRevision: 0.0.1
+      helm:
+        releaseName: event
+        valuesFiles:
+          - "$values/environments/fast/sqa3/event/values.yaml"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fast-sqa3-saml
+  namespace: argocd
+spec:
+  project: fast-sqa3
+  syncPolicy:
+    automated:
+      selfHeal: true
+  destination:
+    name: fast-sqa3
+    namespace: identity
+  sources:
+    - chart: saml
+      repoURL: http://service-helm-charts.s3.amazonaws.com
+      targetRevision: 0.0.1
+      helm:
+        releaseName: saml
+        valuesFiles:
+          - "$values/environments/fast/sqa3/saml/values.yaml"

@@ -1,8 +1,13 @@
 #!/bin/bash
 
 # Extract the version number from the Chart.yaml file
-version=$(yq e '.version' Chart.yaml)
+path=$1
 
+echo $path
+
+version=$(yq e '.version' $path/Chart.yaml)
+
+echo $version
 # Split the version number into major, minor, and patch components
 IFS='.' read -ra ADDR <<< "$version"
 major="${ADDR[0]}"
@@ -20,4 +25,5 @@ new_version="$major.$minor.$patchnumber"
 
 # Update the version number in the Chart.yaml file
 # yq e ".version = \"$new_version\"" -i Chart.yaml
-echo "{new_version}={$new_version}" >> "$GITHUB_ENV"
+echo $new_version
+echo "new_version=$new_version" >> "$GITHUB_ENV"

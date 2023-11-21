@@ -11,12 +11,15 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
-  changed-files:
+  changed-files-job:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
-      changed-files: ${{ steps.changed.outputs.changed-files }}
+      matrix: ${{ steps.changed-files.outputs.all_changed_files }}
+      silo: ${{ steps.fetch-silo-env-names.outputs.silo }}
+      environment: ${{ steps.fetch-silo-env-names.outputs.environment }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,67 +27,133 @@ jobs:
       - uses: tj-actions/changed-files@v40
         id: changed-files
         with:
+          escape_json: false
+          dir_names: true
           dir_names_max_depth: 2
+          files: charts/**
+          json: true
+          quotepath: false
 
       - name: List all changed files
-        run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
-          done
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
-  matrix:
-    needs: changed-files
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
+      - name: fetch environment and service from pull request title
+        id: fetch-silo-env-names
+        run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
+
+  matrix-job:
+    needs: changed-files-job
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        changed_files: ${{ fromJson(needs.changed-files.outputs.changed-files) }}
-    permissions:
-      pull-requests: write
+        files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
+      fail-fast: false
+    permissions: write-all
+    env:
+      silo: ${{ needs.changed-files-job.outputs.silo }}
+      environment: ${{ needs.changed-files-job.outputs.environment }}
+    environment: ${{ needs.changed-files-job.outputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
       - uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-region: us-east-2
-          role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
+          aws-region: us-east-1
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
-
-      - name: Install yq
-        run: |
-          wget https://github.com/mikefarah/yq/releases/download/v4.13.5/yq_linux_amd64 -O /usr/bin/yq &&\
-          chmod +x /usr/bin/yq
-
-      - name: Update Helm Chart Version
-        run: |
-          for file in ${{ matrix.changed_files }}; do
-            echo $file
-            # if [[ $file == "Chart.yaml" ]]; then
-            #   yq e '.version = "0.0.4"' -i $file
-            # fi
-          done
 
       - name: Set up Helm
         uses: azure/setup-helm@v3.5
 
       - name: Install helm s3 plugin
-        run: helm plugin install https://github.com/hypnoglow/helm-s3.git
+        run: |
+          helm plugin install https://github.com/hypnoglow/helm-s3.git
+          helm repo add service-helm-charts s3://service-helm-charts
+
+      - name: set environment value
+        run: |
+          value=$(echo "${{ matrix.files }}" | cut -d"/" -f2)
+          echo "Value: $value"
+          echo "service=$value" >> "$GITHUB_ENV"
+
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
 
       - name: run update version script
         id: updated-version-script
-        run: sh ./scripts/update-version.sh
+        run: ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
-      - name: fetch environment and service from pull request title
-        id: fetch-silo-env-svc-names
-        run: sh ./scripts/update-version.sh
+      - name: install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
 
-      - name: update helm chart verison
-        working-directory: ${{ matrix.changed_files }}
-        run: yq e ".version = \"${{ steps.updated-version-script.outputs.new_version }}\"" -i Chart.yaml
+      - name: run helm chart lint command
+        working-directory: ${{ matrix.files }}
+        run: helm lint
+
+      - name: run helm chart template command
+        working-directory: ${{ matrix.files }}
+        run: helm template ./ -f values.yaml > ../../${{ env.service }}-chart.txt
+
+      - name: check dir
+        run: |
+          pwd
+          ls -ahl
+
+      - name: run aws eks credentials command
+        run: aws eks update-kubeconfig --region us-east-1 --name eks-01
+
+      - name: run helm chart template dry run command
+        working-directory: ${{ matrix.files }}
+        run: helm template ./ -f values.yaml | kubectl apply --dry-run=server -f -
 
       - uses: mshick/add-pr-comment@v2
         with:
+          allow-repeats: true
           message: |
-            Helm chart for service ${{ steps.fetch-silo-env-svc-names.outputs.service }} will be update to version ${{ steps.updated-version-script.outputs.new_version }}
+            Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+
+      - name: update helm chart verison
+        working-directory: ${{ matrix.files }}
+        run: yq e ".version = \"${{ env.new_version }}\"" -i Chart.yaml
+
+      - name: Update Helm dependencies
+        working-directory: ${{ matrix.files }}
+        run: helm dependency update ./
+
+      - name: Package Helm chart
+        working-directory: ${{ matrix.files }}
+        run: helm package ./
+
+      - name: Push Helm chart to S3
+        run: |
+          bucket_name="service-helm-charts"
+          file_key="${{ env.service }}-${{ env.new_version }}.tgz" 
+          aws s3api head-object --bucket "$bucket_name" --key "$file_key" > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "File exists in the bucket."
+          else
+            helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
+            echo "File does not exist in the bucket."
+          fi
+
+      - name: update targetRevision for helm chart
+        working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
+        run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = "${{ env.new_version }}"' -i applications.yaml
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          allow-repeats: true
+          message-path: |
+            ./${{ env.service }}-chart.txt
