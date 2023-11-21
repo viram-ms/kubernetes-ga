@@ -38,11 +38,12 @@ jobs:
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
       - name: fetch environment and service from pull request title
         id: fetch-silo-env-svc-names
-        run: |
-          chmod +x ./.github/scripts/fetch-pr-title.sh
-          ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
+        run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
   matrix-job:
     needs: changed-files-job
@@ -55,29 +56,20 @@ jobs:
       silo: ${{ needs.changed-files-job.outputs.silo }}
       environment: ${{ needs.changed-files-job.outputs.environment }}
       service: ${{ needs.changed-files-job.outputs.service }}
-
+    environment: ${{ needs.changed-files-job.outputs.environment }}
     steps:
-      - name: Run Matrix Job
-        run: |
-          echo $GITHUB_HEAD_REF
-          echo "Running matrix job for changed file: ${{ matrix.files }}"
-          echo ${{ needs.changed-files-job.outputs.silo }}
-          echo ${{ needs.changed-files-job.outputs.environment }}
-          echo ${{ needs.changed-files-job.outputs.service }}
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      # - uses: aws-actions/configure-aws-credentials@v3
-      #   with:
-      #     aws-region: us-east-2
-      #     role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
+      - uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
       - name: Set up Helm
         uses: azure/setup-helm@v3.5
@@ -85,11 +77,12 @@ jobs:
       - name: Install helm s3 plugin
         run: helm plugin install https://github.com/hypnoglow/helm-s3.git
 
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
       - name: run update version script
         id: updated-version-script
-        run: |
-          chmod +x ./.github/scripts/update-version.sh 
-          ./.github/scripts/update-version.sh  ${{ matrix.files }}
+        run: ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
       - name: run helm chart lint command
         working-directory: ${{ matrix.files }}
@@ -97,10 +90,36 @@ jobs:
 
       - name: run helm chart template command
         working-directory: ${{ matrix.files }}
-        run: helm template ./ -f values.yaml
+        run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
 
       - uses: mshick/add-pr-comment@v2
         with:
+          allow-repeats: true
           message: |
             Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+
+      - uses: mshick/add-pr-comment@v2
+        with:
           allow-repeats: true
+          message-path: |
+            ${{ env.servie }}-chart.txt
+
+      - name: update helm chart verison
+        working-directory: ${{ matrix.files }}
+        run: yq e ".version = \"${{ env.new_version }}\"" -i Chart.yaml
+
+      - name: Update Helm dependencies
+        working-directory: ${{ matrix.files }}
+        run: helm dependency update ./
+
+      - name: Package Helm chart
+        working-directory: ${{ matrix.files }}
+        run: helm package ./
+
+      - name: Push Helm chart to S3
+        working-directory: ${{ matrix.files }}
+        run: helm s3 push ${{ matrix.files }}.${{ env.new_version }}.tgz service-helm-charts
+
+      - name: update targetRevision for helm chart
+        working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
+        run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = ${{ env.new_version }} -i application.yaml
