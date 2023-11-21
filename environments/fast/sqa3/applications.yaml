@@ -19,7 +19,6 @@ spec:
         releaseName: authentication
         valuesFiles:
           - "$values/environments/fast/sqa3/authentication/values.yaml"
-
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -37,7 +36,7 @@ spec:
   sources:
     - chart: event
       repoURL: http://service-helm-charts.s3.amazonaws.com
-      targetRevision: 0.0.1
+      targetRevision: 0.0.3
       helm:
         releaseName: event
         valuesFiles:
