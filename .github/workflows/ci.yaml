@@ -39,10 +39,17 @@ jobs:
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
       - name: fetch environment and service from pull request title
-        id: fetch-silo-env-svc-names
         run: |
           chmod +x ./.github/scripts/fetch-pr-title.sh
           ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
+
+      - name: set output
+        id: fetch-silo-env-svc-names
+        run: |
+          echo "environment=${{ env.environment }}" >> "$GITHUB_ENV"
+          echo "silo=${{ env.silo }}" >> "$GITHUB_ENV"
+          echo "service=${{ env.service }}" >> "$GITHUB_ENV"
+          echo ${{ env.environment }} ${{ env.silo }} ${{ env.service }}
 
   matrix-job:
     needs: changed-files-job
