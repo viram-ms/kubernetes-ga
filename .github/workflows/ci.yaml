@@ -78,10 +78,7 @@ jobs:
       - name: Install helm s3 plugin
         run: |
           helm plugin install https://github.com/hypnoglow/helm-s3.git
-          aws s3 ls s3://service-helm-charts
-          helm s3 init s3://service-helm-charts
-          aws s3 ls s3://service-helm-charts
-          helm repo add service-helm-charts s3://my-helm-charts
+          helm repo add service-helm-charts s3://service-helm-charts
 
       - name: update file permission
         run: chmod +x ./.github/scripts/*
