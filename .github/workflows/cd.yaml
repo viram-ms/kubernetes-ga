@@ -53,6 +53,7 @@ jobs:
     strategy:
       matrix:
         files: ${{ fromJson(needs.changed-files-job.outputs.matrix) }}
+      fail-fast: false
     permissions: write-all
     env:
       silo: ${{ needs.changed-files-job.outputs.silo }}

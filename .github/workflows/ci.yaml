@@ -51,6 +51,7 @@ jobs:
     strategy:
       matrix:
         files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
+      fail-fast: false
     permissions: write-all
     env:
       silo: ${{ needs.changed-files-job.outputs.silo }}
@@ -92,6 +93,13 @@ jobs:
         working-directory: ${{ matrix.files }}
         run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
 
+      - name: run aws eks credentials command
+        run: aws eks update-kubeconfig --region us-east-1 --name eks-01
+
+      - name: run helm chart template dry run command
+        working-directory: ${{ matrix.files }}
+        run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
+
       - uses: mshick/add-pr-comment@v2
         with:
           allow-repeats: true
@@ -102,7 +110,7 @@ jobs:
         with:
           allow-repeats: true
           message-path: |
-            ${{ env.servie }}-chart.txt
+            ${{ env.service }}-chart.txt
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
