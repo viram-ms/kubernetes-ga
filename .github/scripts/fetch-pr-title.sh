@@ -24,6 +24,7 @@ for env_name in "${env_names[@]}"; do
  # Check if the environment name is in the pull request title
     if [[ $lowercase_pr_title == *"$env_name"* ]]; then
         echo "line 26"
+        environment=$env_name
         echo "environment=$env_name" >> "$GITHUB_ENV"
         break
     fi
@@ -34,6 +35,7 @@ for svc_name in "${svc_names[@]}"; do
  # Check if the service name is in the pull request title
     if [[ $lowercase_pr_title == *"$svc_name"* ]]; then
         echo "line 36"
+        service=$svc_name
         echo "service=$svc_name" >> "$GITHUB_ENV"
         break
     fi
@@ -44,6 +46,7 @@ for silo_name in "${silo_names[@]}"; do
  # Check if the silo is in the pull request title.
     if [[ $lowercase_pr_title == *"$silo_name"* ]]; then
         echo "line 46"
+        silo=$silo_name
         echo "silo=$silo_name" >> "$GITHUB_ENV"
         break
     fi
