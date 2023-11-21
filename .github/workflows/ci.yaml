@@ -85,6 +85,13 @@ jobs:
         id: updated-version-script
         run: ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
+      - name: install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
       - name: run helm chart lint command
         working-directory: ${{ matrix.files }}
         run: helm lint
@@ -98,19 +105,13 @@ jobs:
 
       - name: run helm chart template dry run command
         working-directory: ${{ matrix.files }}
-        run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
+        run: helm template ./ -f values.yaml | kubectl apply --dry-run=server -f -
 
       - uses: mshick/add-pr-comment@v2
         with:
           allow-repeats: true
           message: |
             Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
-
-      - uses: mshick/add-pr-comment@v2
-        with:
-          allow-repeats: true
-          message-path: |
-            ${{ env.service }}-chart.txt
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
@@ -131,3 +132,14 @@ jobs:
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
         run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = ${{ env.new_version }} -i application.yaml
+
+      - name: check dir
+        run: |
+          pwd
+          ls -ahl
+
+      - uses: mshick/add-pr-comment@v2
+        with:
+          allow-repeats: true
+          message-path: |
+            ./${{ env.service }}-chart.txt
