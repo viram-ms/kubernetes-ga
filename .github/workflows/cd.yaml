@@ -121,6 +121,7 @@ jobs:
           git branch
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
+          git config --global pull.rebase true
           git add .
           git commit -m "Helm chart for service $service will be update to version $new_version"
           git pull
