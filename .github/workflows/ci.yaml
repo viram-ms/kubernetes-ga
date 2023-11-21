@@ -17,6 +17,10 @@ jobs:
       pull-requests: read
     outputs:
       matrix: ${{ steps.changed-files.outputs.all_changed_files }}
+      silo: ${{ steps.fetch-silo-env-svc-names.outputs.silo }}
+      environment: ${{ steps.fetch-silo-env-svc-names.outputs.environment }}
+      service: ${{ steps.fetch-silo-env-svc-names.outputs.service }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,15 +28,21 @@ jobs:
       - uses: tj-actions/changed-files@v40
         id: changed-files
         with:
+          escape_json: false
           dir_names: true
           dir_names_max_depth: 2
           files: charts/**
           json: true
           quotepath: false
-          escape_json: false
 
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+
+      - name: fetch environment and service from pull request title
+        id: fetch-silo-env-svc-names
+        run: |
+          chmod +x ./.github/scripts/fetch-pr-title.sh
+          ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
   matrix-job:
     needs: changed-files-job
@@ -41,6 +51,11 @@ jobs:
       matrix:
         files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
     permissions: write-all
+    env:
+      silo: ${{ needs.changed-files-job.outputs.silo }}
+      environment: ${{ needs.changed-files-job.outputs.environment }}
+      service: ${{ needs.changed-files-job.outputs.service }}
+
     steps:
       - name: Run Matrix Job
         run: |
@@ -61,15 +76,6 @@ jobs:
       #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
-      - name: Update Helm Chart Version
-        run: |
-          for file in ${{ matrix.files }}/*; do
-            echo $file
-            if [[ $file == "Chart.yaml" ]]; then
-              yq e '.version = "0.0.4"' -i $file
-            fi
-          done
-
       - name: Set up Helm
         uses: azure/setup-helm@v3.5
 
@@ -82,24 +88,13 @@ jobs:
           chmod +x ./.github/scripts/update-version.sh 
           ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
-      - name: fetch environment and service from pull request title
-        id: fetch-silo-env-svc-names
-        run: |
-          chmod +x ./.github/scripts/fetch-pr-title.sh
-          ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
-
-      - name: update helm chart verison
+      - name: run helm chart lint command
         working-directory: ${{ matrix.files }}
-        run: yq e ".version = \"$new_version\"" -i Chart.yaml
+        run: helm lint
 
-      # - name: Commit and Push Changes
-      #   run: |
-      #     git config --global user.email "github-actions@github.com"
-      #     git config --global user.name "github-actions"
-      #     git pull
-      #     git add .
-      #     git commit -m "Helm chart for service $service will be update to version $new_version"
-      #     git push
+      - name: run helm chart template command
+        working-directory: ${{ matrix.files }}
+        run: helm template ./ -f values.yaml
 
       - uses: mshick/add-pr-comment@v2
         with:
