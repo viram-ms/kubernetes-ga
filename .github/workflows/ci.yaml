@@ -102,6 +102,11 @@ jobs:
         working-directory: ${{ matrix.files }}
         run: helm template ./ -f values.yaml > ${{ env.service }}-chart.txt
 
+      - name: check dir
+        run: |
+          pwd
+          ls -ahl
+
       - name: run aws eks credentials command
         run: aws eks update-kubeconfig --region us-east-1 --name eks-01
 
@@ -128,16 +133,11 @@ jobs:
         run: helm package ./
 
       - name: Push Helm chart to S3
-        run: helm s3 push ./${{ matrix.files }}.${{ env.new_version }}.tgz service-helm-charts
+        run: helm s3 push ./${{ matrix.files }}.${{ env.service }}.${{ env.new_version }}.tgz service-helm-charts
 
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
         run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = ${{ env.new_version }} -i application.yaml
-
-      - name: check dir
-        run: |
-          pwd
-          ls -ahl
 
       - uses: mshick/add-pr-comment@v2
         with:
