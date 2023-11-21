@@ -16,7 +16,7 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      matrix: ${{ steps.changed-files.outputs.all_changed_files }}
+      # matrix: ${{ steps.changed-files.outputs.all_changed_files }}
       silo: ${{ steps.fetch-silo-env-svc-names.outputs.silo }}
       environment: ${{ steps.fetch-silo-env-svc-names.outputs.environment }}
       service: ${{ steps.fetch-silo-env-svc-names.outputs.service }}
@@ -51,63 +51,63 @@ jobs:
           echo "service=${{ env.service }}" >> "$GITHUB_ENV"
           echo ${{ env.environment }} ${{ env.silo }} ${{ env.service }}
 
-  matrix-job:
-    needs: changed-files-job
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
-    permissions: write-all
-    env:
-      silo: ${{ needs.changed-files-job.outputs.silo }}
-      environment: ${{ needs.changed-files-job.outputs.environment }}
-      service: ${{ needs.changed-files-job.outputs.service }}
+  # matrix-job:
+  #   needs: changed-files-job
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
+  #   permissions: write-all
+  #   env:
+  #     silo: ${{ needs.changed-files-job.outputs.silo }}
+  #     environment: ${{ needs.changed-files-job.outputs.environment }}
+  #     service: ${{ needs.changed-files-job.outputs.service }}
 
-    steps:
-      - name: Run Matrix Job
-        run: |
-          echo $GITHUB_HEAD_REF
-          echo "Running matrix job for changed file: ${{ matrix.files }}"
-          echo ${{ needs.changed-files-job.outputs.silo }}
-          echo ${{ needs.changed-files-job.outputs.environment }}
-          echo ${{ needs.changed-files-job.outputs.service }}
+  #   steps:
+  #     - name: Run Matrix Job
+  #       run: |
+  #         echo $GITHUB_HEAD_REF
+  #         echo "Running matrix job for changed file: ${{ matrix.files }}"
+  #         echo ${{ needs.changed-files-job.outputs.silo }}
+  #         echo ${{ needs.changed-files-job.outputs.environment }}
+  #         echo ${{ needs.changed-files-job.outputs.service }}
 
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.head_ref }}
+  #         fetch-depth: 0
 
-      # - uses: aws-actions/configure-aws-credentials@v3
-      #   with:
-      #     aws-region: us-east-2
-      #     role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
+  #     # - uses: aws-actions/configure-aws-credentials@v3
+  #     #   with:
+  #     #     aws-region: us-east-2
+  #     #     role-to-assume: arn:aws:iam::927377145031:role/Terraform-ReadOnly
+  #     #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     #     role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v3.5
+  #     - name: Set up Helm
+  #       uses: azure/setup-helm@v3.5
 
-      - name: Install helm s3 plugin
-        run: helm plugin install https://github.com/hypnoglow/helm-s3.git
+  #     - name: Install helm s3 plugin
+  #       run: helm plugin install https://github.com/hypnoglow/helm-s3.git
 
-      - name: run update version script
-        id: updated-version-script
-        run: |
-          chmod +x ./.github/scripts/update-version.sh 
-          ./.github/scripts/update-version.sh  ${{ matrix.files }}
+  #     - name: run update version script
+  #       id: updated-version-script
+  #       run: |
+  #         chmod +x ./.github/scripts/update-version.sh
+  #         ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
-      - name: run helm chart lint command
-        working-directory: ${{ matrix.files }}
-        run: helm lint
+  #     - name: run helm chart lint command
+  #       working-directory: ${{ matrix.files }}
+  #       run: helm lint
 
-      - name: run helm chart template command
-        working-directory: ${{ matrix.files }}
-        run: helm template ./ -f values.yaml
+  #     - name: run helm chart template command
+  #       working-directory: ${{ matrix.files }}
+  #       run: helm template ./ -f values.yaml
 
-      - uses: mshick/add-pr-comment@v2
-        with:
-          message: |
-            Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
-          allow-repeats: true
+  #     - uses: mshick/add-pr-comment@v2
+  #       with:
+  #         message: |
+  #           Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
+  #         allow-repeats: true
