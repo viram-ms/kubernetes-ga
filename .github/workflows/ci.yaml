@@ -150,7 +150,7 @@ jobs:
 
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
-        run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = ${{ env.new_version }} -i applications.yaml
+        run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = ${{ env.new_version }}' -i applications.yaml
 
       - uses: mshick/add-pr-comment@v2
         with:
