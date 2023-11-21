@@ -94,6 +94,12 @@ jobs:
 
           echo "line 52 $service $environment $silo"
 
+      - name: List all env
+        run: |
+          echo '${{ steps.fetch-silo-env-svc-names.outputs.silo }}'
+          echo '${{ steps.fetch-silo-env-svc-names.outputs.environment }}'
+          echo '${{ steps.fetch-silo-env-svc-names.outputs.service }}'
+
       # - name: set output
       #   run: |
       #     echo "environment=${{ env.environment }}" >> "$GITHUB_ENV"
