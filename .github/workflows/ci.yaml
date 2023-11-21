@@ -137,7 +137,16 @@ jobs:
         run: helm package ./
 
       - name: Push Helm chart to S3
-        run: helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
+        run: |
+          bucket_name="service-helm-charts"
+          file_key="${{ env.service }}-${{ env.new_version }}.tgz" 
+          aws s3api head-object --bucket "$bucket_name" --key "$file_key" > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            echo "File exists in the bucket."
+          else
+            helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
+            echo "File does not exist in the bucket."
+          fi
 
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
