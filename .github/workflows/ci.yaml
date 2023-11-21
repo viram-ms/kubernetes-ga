@@ -133,9 +133,11 @@ jobs:
           bucket_name="service-helm-charts"
           file_key="${{ env.service }}-${{ env.new_version }}.tgz" 
           aws s3api head-object --bucket "$bucket_name" --key "$file_key" > /dev/null 2>&1
+          echo $?
           if [ $? -eq 0 ]; then
             echo "File exists in the bucket."
           else
+            echo "line 140"
             helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
             echo "File does not exist in the bucket."
           fi
