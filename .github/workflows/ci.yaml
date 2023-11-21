@@ -59,9 +59,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
 
       - uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -105,11 +102,6 @@ jobs:
       - name: run helm chart template command
         working-directory: ${{ matrix.files }}
         run: helm template ./ -f values.yaml > ../../${{ env.service }}-chart.txt
-
-      - name: check dir
-        run: |
-          pwd
-          ls -ahl
 
       - name: run aws eks credentials command
         run: aws eks update-kubeconfig --region us-east-1 --name eks-01
