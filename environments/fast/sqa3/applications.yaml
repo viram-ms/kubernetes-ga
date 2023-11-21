@@ -14,7 +14,7 @@ spec:
   sources:
     - chart: authentication
       repoURL: http://service-helm-charts.s3.amazonaws.com
-      targetRevision: 0.0.1
+      targetRevision: 0.0.5
       helm:
         releaseName: authentication
         valuesFiles:
@@ -36,7 +36,7 @@ spec:
   sources:
     - chart: event
       repoURL: http://service-helm-charts.s3.amazonaws.com
-      targetRevision: 0.0.3
+      targetRevision: 0.0.4
       helm:
         releaseName: event
         valuesFiles:
@@ -58,7 +58,7 @@ spec:
   sources:
     - chart: saml
       repoURL: http://service-helm-charts.s3.amazonaws.com
-      targetRevision: 0.9.12
+      targetRevision: 0.9.13
       helm:
         releaseName: saml
         valuesFiles:
