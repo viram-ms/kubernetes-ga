@@ -104,14 +104,15 @@ jobs:
       - name: update file permission
         run: chmod +x ./.github/scripts/*
 
-      - name: run update version script
+      - name: run update version script 1
         id: updated-version-script-1
         run: |
-          my_array=${{ github.event.pull_request.labels.*.name }}
+          IFS=',' read -ra labels <<< "${{ github.event.pull_request.labels.*.name }}"
           target_string="bug"
-          for element in "${my_array[@]}"; do
-            echo $element
-            if [ "$element" == "$target_string" ]; then
+          # Print each label
+          for label in "${labels[@]}"; do
+            echo "Label: $label"
+            if [ "$label" == "$target_string" ]; then
               found=true
               break
             fi
