@@ -19,7 +19,7 @@ for label in "${labels[@]}"; do
     echo "Label: $label"
     if [ "$label" == "bug" ]; then
         label_found=true
-        update_version
+        update_version $version
         break
     fi
 done
@@ -31,7 +31,7 @@ fi
 
 update_version() {
     # Split the version number into major, minor, and patch components
-    IFS='.' read -ra ADDR <<< "$version"
+    IFS='.' read -ra ADDR <<< "$1"
     major="${ADDR[0]}"
     minor="${ADDR[1]}"
     patch="${ADDR[2]}"
