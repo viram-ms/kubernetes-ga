@@ -106,10 +106,9 @@ jobs:
 
       - name: run update version script
         id: updated-version-script
+        if: contains(github.event.pull_request.labels.*.name, 'bug')
         run: |
-          label_value=$(echo "${{ github.event.label }}" | jq -r '.name')
-          echo "Label Value: $label_value"
-          ./.github/scripts/update-version.sh  ${{ matrix.files }} $label_value
+          ./.github/scripts/update-version.sh  ${{ matrix.files }}
 
       - name: install kubectl
         run: |
