@@ -19,26 +19,6 @@ jobs:
   check-pr-title:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github.event.pull_request.labels) }}
-        run: |
-          label_names=$(echo $GITHUB_CONTEXT | jq -r '.[].name')
-          target_string="bug"
-          found=false
-
-          IFS=', ' read -ra labels <<< "$label_names"
-          for label in "${labels[@]}"; do
-            echo "Label: $label"
-            if [ "$label" == "$target_string" ]; then
-              found=true
-              break
-            fi
-          done
-
-          echo "found=$found" >> $GITHUB_ENV
-          echo "$GITHUB_CONTEXT"
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -124,24 +104,38 @@ jobs:
       - name: update file permission
         run: chmod +x ./.github/scripts/*
 
-      - name: run update version script 1
-        id: updated-version-script-1
+      - name: Run update version script
         env:
-          pr_labels: toJSON(${{ github.event.pull_request.labels.*.name }})
+          pull_request_labels: ${{ toJson(github.event.pull_request.labels) }}
         run: |
-          echo ${{ env.pr_labels }}
+          label_names=$(echo $pull_request_labels | jq -r '.[].name')
+          IFS=', ' read -ra labels <<< "$label_names"
+          label_found=false
+          for label in "${labels[@]}"; do
+            echo "Label: $label"
+            if [ "$label" == "bug" ]; then
+              label_found=true
+              ./.github/scripts/update-version.sh  ${{ matrix.files }}
+              break
+            fi
+          done
 
-      - name: run update version script
-        id: updated-version-script
-        if: contains(github.event.pull_request.labels.*.name, 'bug')
-        run: |
-          ./.github/scripts/update-version.sh  ${{ matrix.files }}
+          if [[ $label_found == "false" ]]; then
+            version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
+            echo "new_version=$version" >> "$GITHUB_ENV"
+          fi 
 
-      - name: set helm chart versin
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'bug') }}
-        run: |
-          version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
-          echo "new_version=$version" >> "$GITHUB_ENV"
+          echo "$pull_request_labels"
+
+      # - name: run update version script
+      #   id: updated-version-script
+      #   if: contains(github.event.pull_request.labels.*.name, 'bug')
+      #   run: |
+      #     ./.github/scripts/update-version.sh  ${{ matrix.files }}
+
+      # - name: set helm chart versin
+      #   if: ${{ !contains(github.event.pull_request.labels.*.name, 'bug') }}
+      #   run: |
 
       - name: install kubectl
         run: |
