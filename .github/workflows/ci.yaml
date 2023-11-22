@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: update file permission
         run: chmod +x ./.github/scripts/*
@@ -43,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - uses: tj-actions/changed-files@v40
         id: changed-files
@@ -79,6 +83,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -107,20 +113,7 @@ jobs:
       - name: Run update version script
         env:
           pull_request_labels: ${{ toJson(github.event.pull_request.labels) }}
-        run: |
-          ./.github/scripts/update-version.sh ${{ matrix.files }}
-
-          echo "$pull_request_labels"
-
-      # - name: run update version script
-      #   id: updated-version-script
-      #   if: contains(github.event.pull_request.labels.*.name, 'bug')
-      #   run: |
-      #     ./.github/scripts/update-version.sh  ${{ matrix.files }}
-
-      # - name: set helm chart versin
-      #   if: ${{ !contains(github.event.pull_request.labels.*.name, 'bug') }}
-      #   run: |
+        run: ./.github/scripts/update-version.sh ${{ matrix.files }}
 
       - name: install kubectl
         run: |
@@ -184,3 +177,14 @@ jobs:
           allow-repeats: true
           message-path: |
             ./${{ env.service }}-chart.txt
+
+      - name: Commit and Push Changes
+        run: |
+          git branch
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git config --global pull.rebase true
+          git add .
+          git commit -m "Helm chart for service $service will be update to version $new_version"
+          git pull
+          git push
