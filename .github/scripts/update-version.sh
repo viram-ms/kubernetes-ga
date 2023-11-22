@@ -47,7 +47,8 @@ for label in "${labels[@]}"; do
     fi
 done
 
-if [[ $label_found == "false" ]]; then
+echo $label_found
+if [ "$label_found" == false ]; then
     version=$(yq e '.version' $path/Chart.yaml)
     echo "new_version=$version" >> "$GITHUB_ENV"
 fi 
