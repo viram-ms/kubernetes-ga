@@ -114,7 +114,7 @@ jobs:
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'bug') }}
         run: |
           version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
-          echo "new_version=$new_version" >> "$GITHUB_ENV"
+          echo "new_version=$version" >> "$GITHUB_ENV"
 
       - name: install kubectl
         run: |
