@@ -48,10 +48,10 @@ for label in "${labels[@]}"; do
 done
 
 if [[ $label_found == "false" ]]; then
-    version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
+    version=$(yq e '.version' $path/Chart.yaml)
     echo "new_version=$version" >> "$GITHUB_ENV"
 fi 
 
-yq e ".version = \"$version\"" -i ${{ matrix.files }}/Chart.yaml
+yq e ".version = \"$version\"" -i $path/Chart.yaml
 
 
