@@ -52,6 +52,6 @@ if [[ $label_found == "false" ]]; then
     echo "new_version=$version" >> "$GITHUB_ENV"
 fi 
 
-yq e ".version = \"${{ env.new_version }}\"" -i ${{ matrix.files }}/Chart.yaml
+yq e ".version = \"$version\"" -i ${{ matrix.files }}/Chart.yaml
 
 
