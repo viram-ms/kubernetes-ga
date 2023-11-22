@@ -2,9 +2,9 @@
 
 # Extract the version number from the Chart.yaml file
 path=$1
-
+label=$2
 echo $path
-
+echo $label
 version=$(yq e '.version' $path/Chart.yaml)
 
 echo $version
@@ -18,7 +18,9 @@ IFS='-' read -ra ADDDR <<< "$patch"
 patchnumber="${ADDDR[0]}"
 
 # Increment the patch component
-patchnumber=$((patchnumber+1))
+if [[ label == "bug" ]]; then
+    patchnumber=$((patchnumber+1))
+fi
 
 # Construct the new version number
 new_version="$major.$minor.$patchnumber"
