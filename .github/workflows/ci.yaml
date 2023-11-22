@@ -106,7 +106,7 @@ jobs:
 
       - name: run update version script
         id: updated-version-script
-        run: ./.github/scripts/update-version.sh  ${{ matrix.files }} ${{ github.event.pull_request.labels.name }}
+        run: ./.github/scripts/update-version.sh  ${{ matrix.files }} ${{ github.event.pull_request.labels.*.name }}
 
       - name: install kubectl
         run: |

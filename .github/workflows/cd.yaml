@@ -6,6 +6,8 @@ on:
       - main
     types:
       - closed
+    paths:
+      - "charts/**"
 
 env:
   # terraform-planner-service user in master account owns these keys.
