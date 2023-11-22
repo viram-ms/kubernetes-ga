@@ -36,7 +36,7 @@ spec:
   sources:
     - chart: event
       repoURL: http://service-helm-charts.s3.amazonaws.com
-      targetRevision: 0.0.4
+      targetRevision: 2.0.2
       helm:
         releaseName: event
         valuesFiles:
