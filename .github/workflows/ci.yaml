@@ -140,6 +140,7 @@ jobs:
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
+        if: contains(github.event.pull_request.labels.*.name, 'bug')
         run: yq e ".version = \"${{ env.new_version }}\"" -i Chart.yaml
 
       - name: Update Helm dependencies
