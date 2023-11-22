@@ -2,12 +2,11 @@
 
 # Extract the version number from the Chart.yaml file
 path=$1
-pull_request_labels=$2
 echo $path
 version=$(yq e '.version' $path/Chart.yaml)
 
 echo $version
-
+echo $pull_request_labels
 label_names=$(echo $pull_request_labels | jq -r '.[].name')
 IFS=', ' read -ra labels <<< "$label_names"
 label_found=false
