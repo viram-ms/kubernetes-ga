@@ -7,6 +7,7 @@ on:
     types:
       - opened
       - labeled
+      - reopened
 
 env:
   # terraform-planner-service user in master account owns these keys
