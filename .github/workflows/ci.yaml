@@ -22,7 +22,22 @@ jobs:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github.event.pull_request.labels) }}
-        run: echo "$GITHUB_CONTEXT"
+        run: |
+          label_names=$(echo $GITHUB_CONTEXT | jq -r '.[].name')
+          target_string="bug"
+          found=false
+
+          IFS=', ' read -ra labels <<< "$label_names"
+          for label in "${labels[@]}"; do
+            echo "Label: $label"
+            if [ "$label" == "$target_string" ]; then
+              found=true
+              break
+            fi
+          done
+
+          echo "found=$found" >> $GITHUB_ENV
+          echo "$GITHUB_CONTEXT"
 
       - name: Checkout code
         uses: actions/checkout@v4
