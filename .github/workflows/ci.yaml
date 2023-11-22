@@ -144,7 +144,6 @@ jobs:
           allow-repeats: true
           message: |
             Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
-
       - name: Update Helm dependencies
         working-directory: ${{ matrix.files }}
         run: helm dependency update ./

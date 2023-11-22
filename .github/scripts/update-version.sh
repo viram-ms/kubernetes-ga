@@ -32,7 +32,7 @@ echo $pull_request_labels
 
 label_names=$(echo $pull_request_labels | jq -r '.[].name')
 echo $label_names
-<<<<<<< HEAD
+
 
 IFS=', ' read -ra labels <<< "$label_names"
 echo $labels
@@ -53,26 +53,5 @@ if [[ $label_found == "false" ]]; then
 fi 
 
 yq e ".version = \"${{ env.new_version }}\"" -i ${{ matrix.files }}/Chart.yaml
-=======
-
-IFS=', ' read -ra labels <<< "$label_names"
-echo $labels
-
-label_found=false
-for label in "${labels[@]}"; do
-    echo "Label: $label"
-    if [ "$label" == "bug" ]; then
-        label_found=true
-        update_version $version
-        break
-    fi
-done
-
-if [[ $label_found == "false" ]]; then
-    version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
-    echo "new_version=$version" >> "$GITHUB_ENV"
-fi 
-
->>>>>>> 1f7e19a (service deployment to fast sqa3 (#10))
 
 
