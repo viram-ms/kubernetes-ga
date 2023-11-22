@@ -108,7 +108,7 @@ jobs:
         env:
           pull_request_labels: ${{ toJson(github.event.pull_request.labels) }}
         run: |
-          ./.github/scripts/update-version.sh ${{ matrix.files }} $pull_request_labels
+          ./.github/scripts/update-version.sh ${{ matrix.files }}
 
           echo "$pull_request_labels"
 

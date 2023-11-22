@@ -4,7 +4,6 @@
 path=$1
 pull_request_labels=$2
 echo $path
-echo $pull_request_labels
 version=$(yq e '.version' $path/Chart.yaml)
 
 echo $version
