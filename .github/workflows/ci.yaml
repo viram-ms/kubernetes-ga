@@ -107,7 +107,7 @@ jobs:
       - name: run update version script 1
         id: updated-version-script-1
         env:
-          pr_labels: ${{ github.event.pull_request.labels }}
+          pr_labels: toJSON(${{ github.event.pull_request.labels }})
         run: |
           echo ${{ env.pr_labels }}
 
