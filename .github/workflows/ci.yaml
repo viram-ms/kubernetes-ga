@@ -105,6 +105,19 @@ jobs:
         run: chmod +x ./.github/scripts/*
 
       - name: run update version script
+        id: updated-version-script-1
+        run: |
+          my_array=${{ github.event.pull_request.labels.*.name }}
+          target_string="bug"
+          for element in "${my_array[@]}"; do
+            echo $element
+            if [ "$element" == "$target_string" ]; then
+              found=true
+              break
+            fi
+          done
+
+      - name: run update version script
         id: updated-version-script
         if: contains(github.event.pull_request.labels.*.name, 'bug')
         run: |
