@@ -107,9 +107,13 @@ jobs:
       - name: run update version script 1
         id: updated-version-script-1
         run: |
-          IFS=',' read -ra labels <<< "${{ github.event.pull_request.labels.*.name }}"
+          label_names=$(echo "${{ github.event.pull_request.labels }}" | jq -r '.[].name')
+
           target_string="bug"
-          # Print each label
+          found=false
+
+          # Check if the target string is in the label names
+          IFS=', ' read -ra labels <<< "$label_names"
           for label in "${labels[@]}"; do
             echo "Label: $label"
             if [ "$label" == "$target_string" ]; then
@@ -117,6 +121,13 @@ jobs:
               break
             fi
           done
+
+          # Output the result
+          if [ "$found" == true ]; then
+            echo "String '$target_string' is in the labels."
+          else
+            echo "String '$target_string' is not in the labels."
+          fi
 
       - name: run update version script
         id: updated-version-script
