@@ -107,7 +107,7 @@ jobs:
       - name: run update version script 1
         id: updated-version-script-1
         run: |
-          label_names=$(echo ${{ github.event.pull_request.labels }} | jq -r '.[].name')
+          label_names=$(echo '${{ github.event.pull_request.labels }}' | jq -r '.[].name')
 
           target_string="bug"
           found=false
