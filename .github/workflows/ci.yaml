@@ -4,6 +4,11 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - labeled
+      - reopened
+      - synchronize
 
 env:
   # terraform-planner-service user in master account owns these keys
@@ -11,7 +16,24 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
+      - name: fetch environment and service from pull request title
+        id: check-pr-title
+        run: ./.github/scripts/check-pr-title.sh "${{ github.event.pull_request.title }}"
+
   changed-files-job:
+    needs: [check-pr-title]
+    if: needs.check-pr-title.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -23,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - uses: tj-actions/changed-files@v40
         id: changed-files
@@ -45,12 +69,13 @@ jobs:
         run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
 
   matrix-job:
-    needs: changed-files-job
+    needs: [check-pr-title, changed-files-job]
     runs-on: ubuntu-latest
     strategy:
       matrix:
         files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
       fail-fast: false
+      max-parallel: 1
     permissions: write-all
     env:
       silo: ${{ needs.changed-files-job.outputs.silo }}
@@ -59,6 +84,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -84,9 +111,10 @@ jobs:
       - name: update file permission
         run: chmod +x ./.github/scripts/*
 
-      - name: run update version script
-        id: updated-version-script
-        run: ./.github/scripts/update-version.sh  ${{ matrix.files }}
+      - name: Run update version script
+        env:
+          pull_request_labels: ${{ toJson(github.event.pull_request.labels) }}
+        run: ./.github/scripts/update-version.sh ${{ matrix.files }}
 
       - name: install kubectl
         run: |
@@ -94,6 +122,7 @@ jobs:
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
           sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
           kubectl version --client
+          rm -rf kubectl.sha256
 
       - name: run helm chart lint command
         working-directory: ${{ matrix.files }}
@@ -118,6 +147,7 @@ jobs:
 
       - name: update helm chart verison
         working-directory: ${{ matrix.files }}
+        if: contains(github.event.pull_request.labels.*.name, 'bug')
         run: yq e ".version = \"${{ env.new_version }}\"" -i Chart.yaml
 
       - name: Update Helm dependencies
@@ -149,3 +179,18 @@ jobs:
           allow-repeats: true
           message-path: |
             ./${{ env.service }}-chart.txt
+
+      - name: remove txt file
+        run: rm -rf ./${{ env.service }}-chart.txt
+
+      - name: Commit and Push Changes
+        run: |
+          git branch
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git config --global pull.rebase true
+          git add charts/*
+          git commit -m "Helm chart for service $service will be update to version $new_version"
+          git stash
+          git pull
+          git push

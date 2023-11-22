@@ -1,0 +1,12 @@
+**.tgz
+.idea
+.vscode
+*.iml
+*.bak
+*.hide
+*.hidden
+*.swp
+forge_modules
+.DS_Store
+.resource_types
+

@@ -6,6 +6,8 @@ on:
       - main
     types:
       - closed
+    paths:
+      - "charts/**"
 
 env:
   # terraform-planner-service user in master account owns these keys.
@@ -115,14 +117,3 @@ jobs:
       - name: update targetRevision for helm chart
         working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
         run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = "${{ env.new_version }}"' -i applications.yaml
-
-      - name: Commit and Push Changes
-        run: |
-          git branch
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-          git config --global pull.rebase true
-          git add .
-          git commit -m "Helm chart for service $service will be update to version $new_version"
-          git pull
-          git push
