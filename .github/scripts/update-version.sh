@@ -12,12 +12,14 @@ label_names=$(echo $pull_request_labels | jq -r '.[].name')
 echo $label_names
 
 IFS=', ' read -ra labels <<< "$label_names"
+echo $labels
+
 label_found=false
 for label in "${labels[@]}"; do
     echo "Label: $label"
     if [ "$label" == "bug" ]; then
         label_found=true
-        update_version()
+        update_version
         break
     fi
 done
