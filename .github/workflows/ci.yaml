@@ -144,12 +144,6 @@ jobs:
           allow-repeats: true
           message: |
             Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}} for ${{ env.silo }} silo in ${{ env.environment }} environment.
-
-      - name: update helm chart verison
-        working-directory: ${{ matrix.files }}
-        if: contains(github.event.pull_request.labels.*.name, 'bug')
-        run: yq e ".version = \"${{ env.new_version }}\"" -i Chart.yaml
-
       - name: Update Helm dependencies
         working-directory: ${{ matrix.files }}
         run: helm dependency update ./
