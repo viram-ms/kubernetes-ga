@@ -108,22 +108,7 @@ jobs:
         env:
           pull_request_labels: ${{ toJson(github.event.pull_request.labels) }}
         run: |
-          label_names=$(echo $pull_request_labels | jq -r '.[].name')
-          IFS=', ' read -ra labels <<< "$label_names"
-          label_found=false
-          for label in "${labels[@]}"; do
-            echo "Label: $label"
-            if [ "$label" == "bug" ]; then
-              label_found=true
-              ./.github/scripts/update-version.sh  ${{ matrix.files }}
-              break
-            fi
-          done
-
-          if [[ $label_found == "false" ]]; then
-            version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
-            echo "new_version=$version" >> "$GITHUB_ENV"
-          fi 
+          ./.github/scripts/update-version.sh ${{ matrix.files }} $pull_request_labels
 
           echo "$pull_request_labels"
 
