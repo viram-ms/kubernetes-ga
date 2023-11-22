@@ -107,9 +107,9 @@ jobs:
       - name: run update version script
         id: updated-version-script
         run: |
-          x=${{ toJson(github.event.pull_request.labels.*.name) }}
-          echo $x
-          ./.github/scripts/update-version.sh  ${{ matrix.files }} toJson(${{ github.event.pull_request.labels.*.name }})
+          label_value=$(echo "${{ github.event.label }}" | jq -r '.name')
+          echo "Label Value: $label_value"
+          ./.github/scripts/update-version.sh  ${{ matrix.files }} $label_value
 
       - name: install kubectl
         run: |
