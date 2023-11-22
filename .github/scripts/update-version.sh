@@ -7,7 +7,10 @@ version=$(yq e '.version' $path/Chart.yaml)
 
 echo $version
 echo $pull_request_labels
+
 label_names=$(echo $pull_request_labels | jq -r '.[].name')
+echo $label_names
+
 IFS=', ' read -ra labels <<< "$label_names"
 label_found=false
 for label in "${labels[@]}"; do
