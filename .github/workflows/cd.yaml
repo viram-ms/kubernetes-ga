@@ -47,6 +47,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: update file permission
+        run: chmod +x ./.github/scripts/*
+
       - uses: tj-actions/changed-files@v40
         id: changed-file-chart-yaml
         with:
@@ -87,4 +90,4 @@ jobs:
       - name: check for changes in chart.yaml
         run: |
           echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
-          ./.github/scripts/ci.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}'
+          ./.github/scripts/cd.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}'
