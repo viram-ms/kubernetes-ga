@@ -28,6 +28,7 @@ update_version() {
 
 count=$1
 path=$2
+branch=$3
 bucket_name="service-helm-charts"
 if [[ $count == 1 ]]; then
     echo "line 3"
@@ -60,7 +61,6 @@ if [[ $count == 0 ]]; then
     git config --global pull.rebase true
     git add charts/*
     git commit -m "Helm chart for service $service will be update to version $new_version"
-    git stash
-    git pull
-    git push
+    git pull origin $branch
+    git push origin $branch
 fi
