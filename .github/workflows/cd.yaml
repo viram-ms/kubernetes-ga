@@ -87,4 +87,4 @@ jobs:
       - name: check for changes in chart.yaml
         run: |
           echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
-          ./.github/scripts/ci.sh ${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }} ${{ matrix.files }}
+          ./.github/scripts/ci.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}'
