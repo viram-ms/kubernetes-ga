@@ -89,7 +89,6 @@ jobs:
         id: changed-file-chart-yaml
         with:
           escape_json: false
-          dir_names: true
           files: ${{ matrix.files }}/Chart.yaml
           json: true
           quotepath: false
