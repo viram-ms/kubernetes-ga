@@ -85,6 +85,23 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
+      - uses: tj-actions/changed-files@v40
+        id: changed-file-chart-yaml
+        with:
+          escape_json: false
+          dir_names: true
+          files: ${{ matrix.files }}/chart.yaml
+          json: true
+          quotepath: false
+
+      - name: List all changed files
+        run: |
+          echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}'
+          echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}'
+          if [[ ${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }} == 1 ]]; then
+            echo "line 102"
+          fi
+
       - uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: us-east-1
