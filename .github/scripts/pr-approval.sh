@@ -28,12 +28,13 @@ update_version() {
 
 count=$1
 path=$2
+branch=$3
 bucket_name="service-helm-charts"
 if [[ $count == 1 ]]; then
     echo "line 3"
     
     version=$(yq e '.version' $path/Chart.yaml)
-    file_key="${{ env.service }}-${{ env.version }}.tgz" 
+    file_key="$service-$version.tgz" 
     if aws s3api list-objects --bucket "$bucket_name" --prefix "$file_key" | grep -q "$file_key"; then
         echo "File exists in the bucket and cannot be uploaded in helm chart repository"
         exit 1
@@ -47,7 +48,7 @@ if [[ $count == 0 ]]; then
     version=$(yq e '.version' $path/Chart.yaml)
     update_version $version $path
     new_version=$(yq e '.version' $path/Chart.yaml)
-    file_key="${{ env.service }}-$new_version.tgz" 
+    file_key="$service-$new_version.tgz" 
     if aws s3api list-objects --bucket "$bucket_name" --prefix "$file_key" | grep -q "$file_key"; then
         echo "File exists in the bucket and cannot be uploaded in helm chart repository"
         exit 1
@@ -61,6 +62,6 @@ if [[ $count == 0 ]]; then
     git add charts/*
     git commit -m "Helm chart for service $service will be update to version $new_version"
     git stash
-    git pull
-    git push
+    git pull origin $branch
+    git push origin $branch
 fi
