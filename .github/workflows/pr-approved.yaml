@@ -42,10 +42,13 @@ jobs:
       fail-fast: false
       max-parallel: 1
     steps:
+      - name: echo head branch
+        run: echo ${{ github.event.pull_request.head.ref }}
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: tj-actions/changed-files@v40
@@ -83,4 +86,4 @@ jobs:
       - name: check for changes in chart.yaml
         run: |
           echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
-          ./.github/scripts/pr-approval.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}' '${{ github.head_ref }}'
+          ./.github/scripts/pr-approval.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}' '${{ github.event.pull_request.head.ref }}'
