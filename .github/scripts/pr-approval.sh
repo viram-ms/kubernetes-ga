@@ -61,6 +61,7 @@ if [[ $count == 0 ]]; then
     git config --global pull.rebase true
     git add charts/*
     git commit -m "Helm chart for service $service will be update to version $new_version"
+    git stash
     git pull origin $branch
     git push origin $branch
 fi
