@@ -36,6 +36,11 @@ jobs:
     needs: [changed-files-job]
     if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        files: ${{ fromJson(needs.changed-files-job.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -77,4 +82,4 @@ jobs:
       - name: check for changes in chart.yaml
         run: |
           echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
-          ./.github/scripts/pr-approved.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}'
+          ./.github/scripts/pr-approval.sh '${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }}' '${{ matrix.files }}'
