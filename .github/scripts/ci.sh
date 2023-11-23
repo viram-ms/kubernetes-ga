@@ -33,7 +33,7 @@ if [[ $count == 1 ]]; then
     echo "line 3"
     
     version=$(yq e '.version' $path/Chart.yaml)
-    file_key="${{ env.service }}-${{ env.version }}.tgz" 
+    file_key="${{ env.service }}-$version.tgz" 
     if aws s3api list-objects --bucket "$bucket_name" --prefix "$file_key" | grep -q "$file_key"; then
         echo "File exists in the bucket and cannot be uploaded in helm chart repository"
         exit 1
