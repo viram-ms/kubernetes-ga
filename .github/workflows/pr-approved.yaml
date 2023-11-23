@@ -46,6 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
       - uses: tj-actions/changed-files@v40
         id: changed-file-chart-yaml
