@@ -90,7 +90,7 @@ jobs:
         with:
           escape_json: false
           dir_names: true
-          files: ${{ matrix.files }}/chart.yaml
+          files: ${{ matrix.files }}/Chart.yaml
           json: true
           quotepath: false
 
