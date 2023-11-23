@@ -32,7 +32,8 @@ bucket_name="service-helm-charts"
 if [[ $count == 1 ]]; then  
     version=$(yq e '.version' $path/Chart.yaml)
     echo $version
-    file_key="${{ env.service }}-$version.tgz" 
+    echo $service
+    file_key="$service-$version.tgz" 
     echo $file_key
     if aws s3api list-objects --bucket "$bucket_name" --prefix "$file_key" | grep -q "$file_key"; then
         echo "File exists in the bucket and cannot be uploaded in helm chart repository"
@@ -47,8 +48,10 @@ if [[ $count == 0 ]]; then
     version=$(yq e '.version' $path/Chart.yaml)
     update_version $version $path
     updated_version=$(yq e '.version' $path/Chart.yaml)
-    echo "line 50 $updated_version"
-    file_key="${{ env.service }}-$updated_version.tgz" 
+    echo "line 51 $updated_version"
+    echo "line 52 $service"
+    file_key="$service-$updated_version.tgz" 
+    echo $file_key
     if aws s3api list-objects --bucket "$bucket_name" --prefix "$file_key" | grep -q "$file_key"; then
         echo "File exists in the bucket and cannot be uploaded in helm chart repository"
         exit 1
