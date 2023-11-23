@@ -1,23 +1,12 @@
-name: Update Helm Chart Version
+name: Pull Request Approved
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-    paths:
-      - "charts/**"
-
-env:
-  # terraform-planner-service user in master account owns these keys
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
+  pull_request_review:
+    types: [submitted]
 jobs:
   changed-files-job:
     runs-on: ubuntu-latest
+    if: github.event.review.state == 'approved'
     permissions:
       pull-requests: read
     outputs:
@@ -29,7 +18,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
 
-      - uses: tj-actions/changed-files@v40
+      - name: changed files
+        uses: tj-actions/changed-files@v40
         id: changed-files
         with:
           escape_json: false
@@ -42,14 +32,10 @@ jobs:
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
-  matrix-job:
+  build:
     needs: [changed-files-job]
+    if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        files: ${{ fromJSON(needs.changed-files-job.outputs.matrix) }}
-      fail-fast: false
-    permissions: write-all
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -81,29 +67,7 @@ jobs:
           helm plugin install https://github.com/hypnoglow/helm-s3.git
           helm repo add service-helm-charts s3://service-helm-charts
 
-      - name: run helm chart lint command
-        working-directory: ${{ matrix.files }}
-        run: helm lint
-
-      - name: Update Helm dependencies
-        working-directory: ${{ matrix.files }}
-        run: helm dependency update ./
-
-      - name: run helm chart template command
-        working-directory: ${{ matrix.files }}
-        run: helm template ./ -f values.yaml > ../../${{ env.service }}-chart.txt
-
       - name: check for changes in chart.yaml
         run: |
           echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
-          ./.github/scripts/ci.sh ${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }} ${{ matrix.files }}
-
-      - uses: mshick/add-pr-comment@v2
-        with:
-          message: |
-            Helm chart for service ${{ env.service }} will be updated to version ${{ env.new_version}}.
-
-      - uses: mshick/add-pr-comment@v2
-        with:
-          message-path: |
-            ./${{ env.service }}-chart.txt
+          ./.github/scripts/pr-approved.sh ${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }} ${{ matrix.files }}

@@ -21,8 +21,6 @@ jobs:
       pull-requests: read
     outputs:
       matrix: ${{ steps.changed-files.outputs.all_changed_files }}
-      silo: ${{ steps.fetch-silo-env-svc-names.outputs.silo }}
-      environment: ${{ steps.fetch-silo-env-svc-names.outputs.environment }}
 
     steps:
       - name: Checkout code
@@ -41,13 +39,6 @@ jobs:
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
-      - name: update file permission
-        run: chmod +x ./.github/scripts/*
-
-      - name: fetch environment and service from pull request title
-        id: fetch-silo-env-svc-names
-        run: ./.github/scripts/fetch-pr-title.sh "${{ github.event.pull_request.title }}"
-
   matrix-job:
     needs: changed-files-job
     runs-on: ubuntu-latest
@@ -55,22 +46,19 @@ jobs:
       matrix:
         files: ${{ fromJson(needs.changed-files-job.outputs.matrix) }}
       fail-fast: false
+      max-parallel: 1
     permissions: write-all
-    env:
-      silo: ${{ needs.changed-files-job.outputs.silo }}
-      environment: ${{ needs.changed-files-job.outputs.environment }}
-    environment: ${{ needs.changed-files-job.outputs.environment }}
-    if: github.event.pull_request.merged == true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v3
+      - uses: tj-actions/changed-files@v40
+        id: changed-file-chart-yaml
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          role-skip-session-tagging: true # don't tag session - LZA doesn't deploy the trust relationship configs for this
+          escape_json: false
+          files: ${{ matrix.files }}/Chart.yaml
+          json: true
+          quotepath: false
 
       - name: set service value
         run: |
@@ -86,11 +74,6 @@ jobs:
           helm plugin install https://github.com/hypnoglow/helm-s3.git
           helm repo add service-helm-charts s3://service-helm-charts
 
-      - name: Set helm chart version
-        run: |
-          version=$(yq e '.version' ${{ matrix.files }}/Chart.yaml)
-          echo "new_version=$version" >> "$GITHUB_ENV"
-
       - name: Update Helm dependencies
         working-directory: ${{ matrix.files }}
         run: helm dependency update ./
@@ -99,18 +82,7 @@ jobs:
         working-directory: ${{ matrix.files }}
         run: helm package ./
 
-      - name: Push Helm chart to S3
+      - name: check for changes in chart.yaml
         run: |
-          bucket_name="service-helm-charts"
-          file_key="${{ env.service }}-${{ env.new_version }}.tgz" 
-          aws s3api head-object --bucket "$bucket_name" --key "$file_key" > /dev/null 2>&1
-          if [ $? -eq 0 ]; then
-            echo "File exists in the bucket."
-          else
-            helm s3 push ./${{ matrix.files }}/${{ env.service }}-${{ env.new_version }}.tgz service-helm-charts
-            echo "File does not exist in the bucket."
-          fi
-
-      # - name: update targetRevision for helm chart
-      #   working-directory: ./environments/${{ env.silo }}/${{ env.environment }}
-      #   run: yq e 'select(.kind == "Application" and .metadata.name == "${{ env.silo }}-${{ env.environment }}-${{ env.service }}").spec.sources[0].targetRevision = "${{ env.new_version }}"' -i applications.yaml
+          echo '${{ steps.changed-file-chart-yaml.outputs.all_changed_files }}' 
+          ./.github/scripts/ci.sh ${{ steps.changed-file-chart-yaml.outputs.all_changed_files_count }} ${{ matrix.files }}
