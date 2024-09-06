@@ -1,0 +1,62 @@
+{
+    "chg_details": {
+        "chg_id": "CHG123456",
+        "env": "qa",
+        "domain": "SC"
+    },
+    "hin_permissions": [
+        {
+            "zone": "landing",
+            "members": [
+                "group:aad_hin_gcp_data-consumer-Augmedix_base@hca.corpad.net",
+                "group:aad_hin_gcp_data-consumer-Augmedix_base@hca.corpad.net"
+            ],
+            "project": {
+                "gcp_base": [
+                    "roles/storage.objectAdmin",
+                    "roles/serviceusage.serviceUsageViewer",
+                    "roles/cloudfunctions.viewer"
+                ],
+                "custom_permission": [
+                    "hin_gcs_base"
+                ]
+            }
+        },
+        {
+            "zone": "processing",
+            "members": [
+                "group:aad_hin_gcp_data-consumer-Augmedix_base@hca.corpad.net"
+            ],
+            "project": {
+                "gcp_base": [
+                    "roles/dataflow.viewer",
+                    "roles/composer.user"
+                ],
+                "custom_permission": [
+                    "hin_gcs_base"
+                ]
+            }
+        },
+        {
+            "zone": "curated",
+            "members": [
+                "group:aad_hin_gcp_data-consumer-Augmedix_base@hca.corpad.net"
+            ],
+            "project": {
+                "gcp_base": [
+                    "roles/bigquery.dataViewer",
+                    "roles/bigquery.jobUser",
+                    "roles/serviceusage.serviceUsageViewer"
+                ]
+            },
+            "bq": {
+                "bq_dataset": [
+                    "prod_support"
+                ],
+                "gcp_base": [
+                    "roles/bigquery.dataEditor"
+                ]
+            }
+        }
+    ]
+}
